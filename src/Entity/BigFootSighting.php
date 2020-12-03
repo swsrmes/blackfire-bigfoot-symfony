@@ -55,7 +55,7 @@ class BigFootSighting
     private $createdAt;
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Entity\Comment", mappedBy="bigFootSighting", fetch="EXTRA_LAZY")
+     * @ORM\OneToMany(targetEntity="App\Entity\Comment", mappedBy="bigFootSighting")
      * @ORM\OrderBy({"createdAt"="DESC"})
      */
     private $comments;
