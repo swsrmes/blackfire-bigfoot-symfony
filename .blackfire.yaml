@@ -60,6 +60,9 @@ tests:
 scenarios: |
     #!blackfire-player
 
+    set user_login "hermiston.lessie@example.com"
+    set user_password "believe"
+
     scenario
         name "Basic Visit"
         visit url("/")
@@ -85,8 +88,8 @@ scenarios: |
         submit button("Sign in")
             name "Authenticate"
             #follow_redirects true
-            param email "lkihn@example.com"
-            param password "believe"
+            param email user_login
+            param password user_password
 
         follow
             expect current_url() == endpoint ~ '/'
