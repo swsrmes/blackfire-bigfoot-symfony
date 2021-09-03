@@ -22,18 +22,17 @@ tests:
     "The homepage should be fast":
         path: "/"
         assertions:
-            - "main.wall_time < 100ms"
+            - "main.wall_time <= 250ms"
 
     "The number of created entities should be reasonable":
         path: "/.*"
         assertions:
-            - "metrics.entities.created.count < 50"
+            - "metrics.entities.created.count <= 50"
 
     "The homepage should have a limited number of SQL queries":
         path: "/"
         assertions:
             - "metrics.sql.queries.count <= 5"
-
 
     "The autoloader classmap should be dumped":
         path: "/.*"
@@ -50,48 +49,69 @@ tests:
         assertions:
             - "metrics.app.agree_to_terms.count == 0"
 
-    "Github API should be called only once":
-        path: "/api/github-organization"
-        assertions:
-            - "metrics.http.requests.count == 1"
-
 # For writing scenarios, take a look at the documentation
 # https://blackfire.io/docs/cookbooks/scenarios
 scenarios: |
     #!blackfire-player
 
-    set user_login "hermiston.lessie@example.com"
-    set user_password "believe"
+    name "BigFoot Sightings Scenarios"
+
+    group login
+        visit url("/login")
+            name "Login page"
+            set user_login css('form.mb-5 div.pb-2 > code:nth-child(1)').text()
+            set user_password css('form.mb-5 div.pb-2 > code:nth-child(2)').text()
+
+        submit button("Sign in")
+            name "Authenticate"
+            param email user_login
+            param password user_password
+
+        follow
+            expect css('nav.navbar ul.navbar-nav > li.nav-item:nth-child(3) a.nav-link').text() == ' Log Out'
 
     scenario
-        name "Basic Visit"
+        name "Anonymous Visit"
+
         visit url("/")
             name "Homepage"
             expect status_code() == 200
             expect css("tbody.js-sightings-list tr").count() > 10
 
-        #click css('tbody.js-sightings-list tr a')
+        # Click on the 3rd link from the list.
         click css('.js-sightings-list > tr:nth-child(3) a')
             name "First sighting page"
             expect status_code() == 200
 
+        visit url("/about")
+            name "About page"
+            expect status_code() == 200
+            expect css('div.top-nav h1.mt-5').text() == 'Bigfoot is out there'
+
+        # Data displayed in the sidebar
+        visit url("/api/github-organization")
+            expect json("organization.name") == "SymfonyCasts"
+            expect json("organization.repositoryCount") > 0
+
+        # 2nd page of sightings
+        visit url("/_sightings?page=2")
+            expect json("html") != ""
+            expect json("next") == 3
+
     scenario
         name "Authenticated Visit"
-
+        include login
         visit url("/")
             name "Homepage"
             expect status_code() == 200
+            expect css("tbody.js-sightings-list tr").count() > 10
 
-        click link("Log In")
-            name "Login page"
+        # Click on the 3rd link from the list.
+        click css('.js-sightings-list > tr:nth-child(3) a')
+            name "First sighting page"
+            expect status_code() == 200
 
-        submit button("Sign in")
-            name "Authenticate"
-            #follow_redirects true
-            param email user_login
-            param password user_password
-
-        follow
-            expect current_url() == endpoint ~ '/'
-            expect css('nav.navbar ul.navbar-nav > li.nav-item:nth-child(3) a.nav-link').text() == ' Log Out'
-            assert metrics.app.agree_to_terms.count == 0
+        # 2nd page of sightings
+        visit url("/_sightings?page=2")
+            expect json("html") != ""
+            expect json("next") == 3
