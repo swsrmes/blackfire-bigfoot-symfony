@@ -20,12 +20,21 @@ class BigFootSightingRepository extends ServiceEntityRepository
         parent::__construct($registry, BigFootSighting::class);
     }
 
-    public function findLatestQueryBuilder(int $maxResults): QueryBuilder
+    public function findLatest(int $maxResults = 25): array
     {
         return $this->createQueryBuilder('big_foot_sighting')
             ->leftJoin('big_foot_sighting.comments', 'comments')
             ->groupBy('big_foot_sighting.id')
             ->addSelect('COUNT(comments.id) as comments_count')
+            ->setMaxResults($maxResults)
+            ->orderBy('big_foot_sighting.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function findLatestQueryBuilder(int $maxResults): QueryBuilder
+    {
+        return $this->createQueryBuilder('big_foot_sighting')
             ->setMaxResults($maxResults)
             ->orderBy('big_foot_sighting.createdAt', 'DESC');
     }

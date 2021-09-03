@@ -13,7 +13,23 @@
             </tr>
         </thead>
         <tbody class="js-sightings-list" data-url="{{ path('app_sightings_partial_list') }}">
-            {{ include('main/_sightings.html.twig') }}
+        {% for sightingData in sightings %}
+            {% set sighting = sightingData.0 %}
+            {% set commentsCount = sightingData.comments_count %}
+            <tr>
+                <td>
+                    <a class="text-white" href="{{ path('app_sighting_show', {id: sighting.id}) }}">
+                        {{ sighting.title }}
+                    </a>
+                </td>
+                <td class="text-nowrap">
+                    <time class="table-content" datetime="{{ sighting.createdAt|date('Y-m-d H:i') }}">{{ sighting.createdAt|time_diff }}</time>
+                </td>
+                <td>
+                    <a class="text-white table-content text-center" href="{{ path('app_sighting_show', {id: sighting.id}) }}">{{ commentsCount }}</a>
+                </td>
+            </tr>
+        {% endfor %}
         </tbody>
     </table>
 </div>
