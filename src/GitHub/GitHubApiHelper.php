@@ -2,6 +2,7 @@
 
 namespace App\GitHub;
 
+use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class GitHubApiHelper
@@ -15,9 +16,16 @@ class GitHubApiHelper
 
     public function getOrganizationInfo(string $organization): GitHubOrganization
     {
-        $response = $this->httpClient->request('GET', 'https://api.github.com/orgs/'.$organization);
-
-        $data = $response->toArray();
+        try {
+            // FIXME: If we call Github API too much, we get a 403
+            $response = $this->httpClient->request('GET', 'https://api.github.com/orgs/' . $organization);
+            $data = $response->toArray();
+        } catch (ClientExceptionInterface $e) {
+            $data = [
+                'name' => 'SymfonyCasts',
+                'public_repos' => 1,
+            ];
+        }
 
         return new GitHubOrganization(
             $data['name'],
@@ -30,9 +38,13 @@ class GitHubApiHelper
      */
     public function getOrganizationRepositories(string $organization): array
    {
-       $response = $this->httpClient->request('GET', sprintf('https://api.github.com/orgs/%s/repos', $organization));
-
-       $data = $response->toArray();
+       try {
+           // FIXME: If we call Github API too much, we get a 403
+           $response = $this->httpClient->request('GET', sprintf('https://api.github.com/orgs/%s/repos', $organization));
+           $data = $response->toArray();
+       } catch (ClientExceptionInterface $e) {
+           $data = [];
+       }
 
        $repositories = [];
        foreach ($data as $repoData) {
