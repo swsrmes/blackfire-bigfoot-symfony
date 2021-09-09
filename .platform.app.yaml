@@ -14,7 +14,6 @@ runtime:
     extensions:
         - apcu
         - blackfire
-        - apcu
 
 variables:
     env:
