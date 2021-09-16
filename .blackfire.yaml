@@ -22,7 +22,7 @@ tests:
     "The homepage should be fast":
         path: "/"
         assertions:
-            - "main.wall_time <= 250ms"
+            - "main.wall_time <= 300ms"
 
     "The number of created entities should be reasonable":
         path: "/.*"
