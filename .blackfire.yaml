@@ -70,9 +70,7 @@ scenarios: |
         follow
             expect css('nav.navbar ul.navbar-nav > li.nav-item:nth-child(3) a.nav-link').text() == ' Log Out'
 
-    scenario
-        name "Anonymous Visit"
-
+    group regular_visit
         visit url("/")
             name "Homepage"
             expect status_code() == 200
@@ -88,6 +86,7 @@ scenarios: |
             expect status_code() == 200
             expect css('div.top-nav h1.mt-5').text() == 'Bigfoot is out there'
 
+    group xhr_requests
         # Data displayed in the sidebar
         visit url("/api/github-organization")
             expect json("organization.name") == "SymfonyCasts"
@@ -99,19 +98,14 @@ scenarios: |
             expect json("next") == 3
 
     scenario
+        name "Anonymous Visit"
+
+        include regular_visit
+        include xhr_requests
+
+
+    scenario
         name "Authenticated Visit"
         include login
-        visit url("/")
-            name "Homepage"
-            expect status_code() == 200
-            expect css("tbody.js-sightings-list tr").count() > 10
-
-        # Click on the 3rd link from the list.
-        click css('.js-sightings-list > tr:nth-child(3) a')
-            name "First sighting page"
-            expect status_code() == 200
-
-        # 2nd page of sightings
-        visit url("/_sightings?page=2")
-            expect json("html") != ""
-            expect json("next") == 3
+        include regular_visit
+        include xhr_requests
