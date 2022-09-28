@@ -1,0 +1,5 @@
+group sightings
+    visit url('/_sightings')
+        expect status_code() == 200
+        expect header("Content-Type") == "application/json"
+        expect json("html") # assert that json value is parseable html

@@ -8,7 +8,7 @@ metrics:
         matching_calls:
             php:
                 -
-                    callee: '=App\Service\CommentHelper::countRecentCommentsForUser'
+                    callee: '=App\Service\CommentHelper::calculateUserActivityText'
 
     app.agree_to_terms:
         label: "Agree to terms"
@@ -23,6 +23,12 @@ tests:
         path: "/"
         assertions:
             - "main.wall_time <= 300ms"
+
+    'Twig template cache should be enabled in production':
+        path: '/.*'
+        unless: 'is_dev()'
+        assertions:
+            - 'metrics.twig.compile.count == 0'
 
     "The number of created entities should be reasonable":
         path: "/.*"
@@ -49,12 +55,19 @@ tests:
         assertions:
             - "metrics.app.agree_to_terms.count == 0"
 
+    "New sightings fetch will only query the database once":
+        path: "/_sightings.*"
+        assertions:
+            - "main.wall_time <= 50ms"
+
 # For writing scenarios, take a look at the documentation
 # https://blackfire.io/docs/cookbooks/scenarios
 scenarios: |
     #!blackfire-player
 
     name "BigFoot Sightings Scenarios"
+    
+    load "groups.bkf"
 
     group login
         visit url("/login")
@@ -109,3 +122,7 @@ scenarios: |
         include login
         include regular_visit
         include xhr_requests
+    
+    scenario
+        name "Sightings ajax"
+        include sightings
